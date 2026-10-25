@@ -1,0 +1,10 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+eaton-monitor-*.csv
+*.pcap
+*.pcapng
+smarthome_devices.csv

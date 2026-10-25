@@ -1,0 +1,24 @@
+services:
+  eaton-usb:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      USB_DEVICE: /dev/eaton
+      DEVICES_FILE: /app/smarthome_devices.csv
+    devices:
+      - "${EATON_DEVICE:-/dev/hidraw1}:/dev/eaton:rw"
+    group_add:
+      - "${EATON_GID:-0}"
+    volumes:
+      - ./smarthome_devices.csv:/app/smarthome_devices.csv:ro
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "2"

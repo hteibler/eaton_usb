@@ -1,0 +1,6 @@
+*
+!requirements.txt
+!protocol.py
+!linux_reader.py
+!mqtt_bridge.py
+!mqtt_service.py
