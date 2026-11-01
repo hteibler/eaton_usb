@@ -4,3 +4,5 @@
 !linux_reader.py
 !mqtt_bridge.py
 !mqtt_service.py
+!serial_reader.py
+!debug_log.py

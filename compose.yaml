@@ -4,6 +4,10 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
+      TZ: Europe/Vienna
+      DEBUG_LOG: /app/logs/debug.log
+      # hid: CKOZ-00/13; serial: CRSZ-00/01 via FT232 UART.
+      EATON_TRANSPORT: ${EATON_TRANSPORT:-hid}
       USB_DEVICE: /dev/eaton
       DEVICES_FILE: /app/smarthome_devices.csv
     devices:
@@ -11,6 +15,8 @@ services:
     group_add:
       - "${EATON_GID:-0}"
     volumes:
+      - debug-logs:/app/logs
+      - /usr/share/zoneinfo/Europe/Vienna:/usr/share/zoneinfo/Europe/Vienna:ro
       - ./smarthome_devices.csv:/app/smarthome_devices.csv:ro
     read_only: true
     cap_drop:
@@ -22,3 +28,6 @@ services:
       options:
         max-size: "5m"
         max-file: "2"
+
+volumes:
+  debug-logs:

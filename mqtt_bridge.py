@@ -37,9 +37,15 @@ def event_from_report(report, devices):
     }.get(kind, "N/A")
     sender_name, sender_type = devices.get(telegram.source, ("", ""))
     button = "N/A"
-    # Apply DT1's observed side layout to the same two-button device class.
-    if (telegram.source == 534129 or sender_type == "Taster 2-fach") and kind in (0x50, 0x51, 0x54, 0x55, 0x56, 0x57):
+    if sender_type == "Taster 2-fach" and action != "N/A":
         button = {0: "LEFT", 1: "RIGHT"}.get(report[9], "N/A")
+    if (sender_type in ("Taster 4-fach", "CTAA-04/04")
+            and action != "N/A" and report[9] < 4):
+        button = str(report[9] + 1)
+    if sender_type == "Fernbedienung" and action != "N/A" and report[9] < 12:
+        channel = report[9] // 2 + 1
+        side = "LEFT" if report[9] % 2 == 0 else "RIGHT"
+        button = f"{channel}-{side}"
     other = {}
     if action == "N/A":
         other["message"] = {1: "ACKNOWLEDGEMENT", 0x70: "LEGACY STATUS"}.get(
@@ -58,5 +64,13 @@ def event_from_report(report, devices):
         "receiver_name": receiver_name,
         "button": button,
         "action": action,
+        "power_supply": {
+            "netzversorgt": "MAINS_POWERED",
+            "voll": "BATTERY_FULL",
+            "fast voll": "BATTERY_NEARLY_FULL",
+        }.get(telegram.battery, telegram.battery.replace("Code ", "CODE ") or "N/A"),
+        "reception_percent": telegram.quality,
+        "rssi_dbm": telegram.rssi_dbm,
+        "raw": telegram.raw,
         "other": other,
     }

@@ -58,11 +58,6 @@ def decode(report: bytes) -> Telegram:
     battery = "netzversorgt" if kind in (0x01, 0x70) else ""
     if kind in (0x50, 0x51, 0x54, 0x55, 0x56, 0x57) and size > 8:
         battery = BATTERY.get(packet[8], f"Code 0x{packet[8]:02X}")
-        # Byte 9 identifies the rocker side in the observed DT1 telegrams.
-        if size > 9 and source == 534129:
-            side = {0: "LEFT", 1: "RIGHT"}.get(packet[9])
-            if side is not None:
-                message = f"{side} {message}"
         if size > 7 and packet[7] == 0x10:
             message += " (Wiederholung)"
 
@@ -71,3 +66,27 @@ def decode(report: bytes) -> Telegram:
     rssi = int.from_bytes(packet[-3:-1], "little", signed=True) / 10
     quality = max(0, min(100, round((rssi + 101) * 2)))
     return Telegram(source, destination, message, battery, quality, rssi, destination_dp, packet.hex(" ").upper())
+
+
+def build_switch_command(serial: int, command: str, sequence: int) -> bytes:
+    """Build captured 0x1B frame; fixed fields verified for this installation only."""
+    if type(serial) is not int or not 1 <= serial <= 0xFFFFFFFF:
+        raise ValueError("Receiver ID must be an integer between 1 and 4294967295.")
+    if command not in ("ON", "OFF"):
+        raise ValueError("Only ON and OFF are supported.")
+    if type(sequence) is not int or not 0x10 <= sequence <= 0x1F:
+        raise ValueError("Switch sequence must be between 0x10 and 0x1F.")
+    packet = bytearray.fromhex("5a 17 1b 50 00 13 00 82 07 00 80 00 00 00 00")
+    packet[3] = 0x50 if command == "ON" else 0x51
+    packet[6] = sequence
+    packet.extend(serial.to_bytes(4, "little"))
+    packet.append(0)
+    # CRC-16/KERMIT over bytes 3..19, stored little-endian.
+    crc = 0
+    for value in packet[3:]:
+        crc ^= value
+        for _ in range(8):
+            crc = (crc >> 1) ^ (0x8408 if crc & 1 else 0)
+    packet.extend(crc.to_bytes(2, "little"))
+    packet.append(0xA5)
+    return bytes(packet)

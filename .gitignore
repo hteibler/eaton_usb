@@ -8,3 +8,4 @@ eaton-monitor-*.csv
 *.pcap
 *.pcapng
 smarthome_devices.csv
+debug.log*

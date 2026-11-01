@@ -1,0 +1,2 @@
+# Eaton CKOZ-00/13 only; matches the container supplemental group 0.
+SUBSYSTEM=="hidraw", KERNEL=="hidraw*", ATTRS{idVendor}=="188a", ATTRS{idProduct}=="1102", GROUP="root", MODE="0660", SYMLINK+="eaton"
